@@ -1,5 +1,5 @@
 import './css/styles.css';
-
+import { fetchCountries } from './api-service';
 import debounce from 'lodash.debounce';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
@@ -18,7 +18,6 @@ function onSearch(evt) {
   clearCuontryInfoContainer();
 
   if (!countryName) {
-    clearCountryList();
     return;
   }
   fetchCountries(countryName)
@@ -32,27 +31,16 @@ function onSearch(evt) {
     })
     .then(response => {
       if (response && response.length >= 2 && response.length <= 10) {
-        countryList.insertAdjacentHTML(
-          'beforeend',
-          renderCountryList(response)
-        );
+        renderCountryList(response);
       }
       return response;
     })
     .then(response => {
       if (response && response.length == 1) {
-        countryInfo.insertAdjacentHTML(
-          'beforeend',
-          renderCountryInfo(response)
-        );
+        renderCountryInfo(response);
       }
-    });
-}
-function fetchCountries(name) {
-  const BASE_URL = 'https://restcountries.com/v3.1';
-
-  return fetch(`${BASE_URL}/name/${name}?fields=name,capital,population,flags,languages
-`).then(response => response.json());
+    })
+    .catch(Error => Notify.failure('Oops, there is no country with that name'));
 }
 
 function makeCountryItemMarkup({ name, flags }) {
@@ -65,7 +53,8 @@ function makeCountryItemMarkup({ name, flags }) {
 }
 
 function renderCountryList(response) {
-  return response.map(makeCountryItemMarkup).join('');
+  const countryListMarkup = response.map(makeCountryItemMarkup).join('');
+  return countryList.insertAdjacentHTML('beforeend', countryListMarkup);
 }
 function makeCountryInfoMarkup({
   name,
@@ -92,7 +81,8 @@ function makeCountryInfoMarkup({
     `;
 }
 function renderCountryInfo(response) {
-  return response.map(makeCountryInfoMarkup).join('');
+  const countryInfoMarkup = response.map(makeCountryInfoMarkup).join('');
+  return countryInfo.insertAdjacentHTML('beforeend', countryInfoMarkup);
 }
 function clearCountryList() {
   countryList.innerHTML = '';
